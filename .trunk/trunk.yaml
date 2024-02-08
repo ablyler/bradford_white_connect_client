@@ -37,8 +37,9 @@ lint:
   ignore:
     - linters: [ALL]
       paths:
-        # GitHub Issue Templates
-        - .github/ISSUE_TEMPLATE/**
+        - .devcontainer/**
+        - .github/**
+        - poetry.lock
 actions:
   disabled:
     - trunk-check-pre-push

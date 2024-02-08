@@ -31,7 +31,10 @@ class BradfordWhiteConnectClient:
     token: Optional[str] = None
 
     def __init__(
-        self, email: str, password: str, session: Optional[aiohttp.ClientSession] = None
+        self,
+        email: str,
+        password: str,
+        session: Optional[aiohttp.ClientSession] = None,
     ):
         self.email = email
         self.password = password
@@ -78,6 +81,7 @@ class BradfordWhiteConnectClient:
         Returns:
             The response object from the server.
         """
+        # trunk-ignore(flake8/E501)
         async with self.session.post(uri, headers=headers, data=data) as response:
             response.raise_for_status()
             return await response.json()
@@ -113,6 +117,7 @@ class BradfordWhiteConnectClient:
         responseJson = await self.http_get_request(url, headers=headers)
 
         # Map to PropertyWrapper class
+        # trunk-ignore(flake8/E501)
         return [PropertyWrapper(Property(**item["property"])) for item in responseJson]
 
     async def set_device_heat_mode(

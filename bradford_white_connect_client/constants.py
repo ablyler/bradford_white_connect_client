@@ -1,4 +1,5 @@
 BRADFORD_WHITE_APP_ID = "BW-Bw-id"
+# trunk-ignore(bandit/B105)
 BRADFORD_WHITE_APP_SECRET = "BW-1rzhJw2BsALGBW2PVLTqaJIn-yE"
 
 
