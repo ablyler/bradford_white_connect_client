@@ -1,16 +1,10 @@
 """Define a base client for interacting with Bradford White Connect."""
 
-from dataclasses import asdict
-import datetime
 import json
 import logging
-import time
 from typing import Dict, Optional
-from urllib import response
-import urllib.parse
 
 import aiohttp
-import pytz
 from tenacity import (
     before_sleep_log,
     retry,
@@ -18,7 +12,6 @@ from tenacity import (
     stop_after_attempt,
     wait_fixed,
 )
-from yarl import URL
 
 from .constants import (
     BRADFORD_WHITE_APP_ID,
@@ -35,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 
 class BradfordWhiteConnectClient:
-    token: str = None
+    token: Optional[str] = None
 
     def __init__(
         self, email: str, password: str, session: Optional[aiohttp.ClientSession] = None
@@ -98,9 +91,8 @@ class BradfordWhiteConnectClient:
             "authorization": f"auth_token {self.token}",
         }
 
-        responseJson = await self.http_get_request(
-            "https://ads-field.aylanetworks.com/apiv1/devices.json", headers=headers
-        )
+        url = "https://ads-field.aylanetworks.com" "/apiv1/devices.json"
+        responseJson = await self.http_get_request(url, headers=headers)
 
         # Map to Device class
         return [Device(**item["device"]) for item in responseJson]
@@ -114,10 +106,11 @@ class BradfordWhiteConnectClient:
             "authorization": f"auth_token {self.token}",
         }
 
-        responseJson = await self.http_get_request(
-            f"https://ads-field.aylanetworks.com/apiv1/dsns/{device.dsn}/properties.json",
-            headers=headers,
+        url = (
+            f"https://ads-field.aylanetworks.com"
+            f"/apiv1/dsns/{device.dsn}/properties.json"
         )
+        responseJson = await self.http_get_request(url, headers=headers)
 
         # Map to PropertyWrapper class
         return [PropertyWrapper(Property(**item["property"])) for item in responseJson]
@@ -137,8 +130,14 @@ class BradfordWhiteConnectClient:
 
         data = {"datapoint": {"value": mode}}
 
+        url = (
+            f"https://ads-field.aylanetworks.com"
+            f"/apiv1/dsns/{device.dsn}/properties/"
+            f"set_heat_mode_{mode}/datapoints.json"
+        )
+
         return await self.http_post_request(
-            f"https://ads-field.aylanetworks.com/apiv1/dsns/{device.dsn}/properties/set_heat_mode_{mode}/datapoints.json",
+            url,
             headers=headers,
             data=json.dumps(data),
         )
@@ -156,8 +155,14 @@ class BradfordWhiteConnectClient:
 
         data = {"datapoint": {"value": value}}
 
+        url = (
+            f"https://ads-field.aylanetworks.com"
+            f"/apiv1/dsns/{device.dsn}/properties/"
+            f"water_setpoint_in/datapoints.json"
+        )
+
         await self.http_post_request(
-            f"https://ads-field.aylanetworks.com/apiv1/dsns/{device.dsn}/properties/water_setpoint_in/datapoints.json",
+            url,
             headers=headers,
             data=json.dumps(data),
         )
@@ -199,6 +204,6 @@ class BradfordWhiteConnectClient:
         )
 
         if responseJson.get("access_token") is None:
-            raise BradfordWhiteConnectAuthenticationError("Authentication failed")
+            raise BradfordWhiteConnectAuthenticationError("Auth failed")
 
         self.token = responseJson["access_token"]

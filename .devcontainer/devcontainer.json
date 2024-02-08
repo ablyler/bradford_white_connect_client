@@ -12,24 +12,7 @@
   },
   "customizations": {
     "vscode": {
-      "extensions": [
-        "donjayamanne.python-environment-manager",
-        "EricSia.pythonsnippets3",
-        "esbenp.prettier-vscode",
-        "GitHub.copilot-chat",
-        "github.vscode-github-actions",
-        "GitHub.vscode-pull-request-github",
-        "HarryHopkinson.vs-code-runner",
-        "littlefoxteam.vscode-python-test-adapter",
-        "ms-azuretools.vscode-docker",
-        "ms-python.python",
-        "redhat.vscode-yaml",
-        "Rubymaniac.vscode-direnv",
-        "visualstudioexptteam.vscodeintellicode",
-        "ms-pyright.pyright",
-        "ms-python.flake8",
-        "arahata.linter-actionlint"
-      ]
+      "extensions": []
     }
   },
 
