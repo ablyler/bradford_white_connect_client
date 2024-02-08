@@ -2,5 +2,6 @@
 
 from .client import (  # noqa
     BradfordWhiteConnectAuthenticationError,
+    BradfordWhiteConnectUnknownException,
     BradfordWhiteConnectClient,
 )
