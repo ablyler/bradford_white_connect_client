@@ -6,32 +6,6 @@ from typing import List, Optional
 from dataclasses_json import LetterCase, dataclass_json
 
 
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass
-class Device:
-    product_name: str
-    model: str
-    dsn: str
-    oem_model: str
-    sw_version: str
-    template_id: int
-    mac: str
-    unique_hardware_id: Optional[str]
-    lan_ip: str
-    connected_at: str
-    key: int
-    lan_enabled: bool
-    connection_priority: List[str]
-    has_properties: bool
-    product_class: Optional[str]
-    connection_status: str
-    lat: str
-    lng: str
-    locality: Optional[str]
-    device_type: str
-    dealer: Optional[str]
-
-
 @dataclass
 class Property:
     type: str
@@ -65,3 +39,30 @@ class Property:
 @dataclass
 class PropertyWrapper:
     property: Property
+
+
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass
+class Device:
+    product_name: str
+    model: str
+    dsn: str
+    oem_model: str
+    sw_version: str
+    template_id: int
+    mac: str
+    unique_hardware_id: Optional[str]
+    lan_ip: str
+    connected_at: str
+    key: int
+    lan_enabled: bool
+    connection_priority: List[str]
+    has_properties: bool
+    product_class: Optional[str]
+    connection_status: str
+    lat: str
+    lng: str
+    locality: Optional[str]
+    device_type: str
+    dealer: Optional[str]
+    properties: Optional[List[Property]] = field(default=None)
