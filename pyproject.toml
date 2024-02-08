@@ -1,0 +1,52 @@
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+combine_as_imports = true
+default_section = "THIRDPARTY"
+force_grid_wrap = 0
+force_sort_within_sections = true
+forced_separate = "tests"
+include_trailing_comma = true
+indent = "    "
+known_first_party = "bradford_white_connect_client,tests"
+line_length = 88
+multi_line_output = 3
+not_skip = "__init__.py"
+sections = "FUTURE,STDLIB,INBETWEENS,THIRDPARTY,FIRSTPARTY,LOCALFOLDER"
+use_parentheses = true
+
+[tool.poetry]
+name = "bradford_white_connect_client"
+version = "0.0.1-rc1"
+description = "A Python3, async-friendly client library for Bradford White Connect"
+readme = "README.md"
+authors = ["Andy Blyler <ablyler@blyler.cc>"]
+license = "MIT"
+repository = "https://github.com/ablyler/bradford_white_connect_client"
+classifiers = [
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+]
+
+[tool.poetry.dependencies]
+aiohttp = ">=3.8.0"
+python = ">=3.11.0,<4.0"
+dataclasses-json = ">=0.6.1"
+
+[tool.poetry.dev-dependencies]
+pre-commit = "^3.6.0"
+pytest = "^7.4.4"
+pytest-aiohttp = "*"
+pytest-cov = "^3.0.0"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

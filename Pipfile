@@ -1,0 +1,18 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+aiohttp = "*"
+dataclasses-json = "*"
+pytz = "*"
+tenacity = "*"
+
+[dev-packages]
+pytest = "*"
+pytest-aiohttp = "*"
+pytest-cov = "*"
+
+[requires]
+python_version = "3.11"
