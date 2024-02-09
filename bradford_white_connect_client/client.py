@@ -51,38 +51,86 @@ class BradfordWhiteConnectClient:
         stop=stop_after_attempt(6),
         before_sleep=before_sleep_log(logger, logging.DEBUG),
     )
-    async def http_get_request(self, uri: str, headers: Dict[str, str]) -> str:
+    async def http_get_request(
+        self, uri: str, headers: Dict[str, str], retrying_after_login: bool = False
+    ) -> str:
         """
         Sends an HTTP GET request to the specified URI with the given headers.
 
         Args:
-            uri (str): The URI to send the request to.
+            uri (str): The URI to send the GET request to.
             headers (Dict[str, str]): The headers to include in the request.
+            retrying_after_login (bool, optional): Indicates whether the request is being retried after logging in. Defaults to False.
 
         Returns:
-            str: The response text from the server.
+            str: The response body as a string.
 
         Raises:
-            HTTPError: If the response status code is not in the 200-299 range.
+            BradfordWhiteConnectUnknownException: If a 401 status code is received after logging in.
+            requests.exceptions.HTTPError: If a non-2xx status code is received.
         """
         async with self.session.get(uri, headers=headers) as response:
+            # catch access denied errors and attempt to re-authenticate
+            if response.status == 401:
+                # if we're already retrying after logging in, raise an exception
+                if retrying_after_login:
+                    raise BradfordWhiteConnectUnknownException(
+                        "Received status code 401 after logging in"
+                    )
+
+                # update headers with new token
+                logger.debug("Token may be expired - retrying login")
+                await self.authenticate()
+                headers["authorization"] = f"auth_token {self.token}"
+
+                # retry the request
+                return await self.http_get_request(
+                    uri, headers, retrying_after_login=True
+                )
+
             response.raise_for_status()
             return await response.json()
 
-    async def http_post_request(self, uri, headers, data):
+    async def http_post_request(
+        self, uri, headers, data, retrying_after_login: bool = False
+    ):
         """
-        Sends an HTTP POST request.
+        Sends an HTTP POST request to the specified URI with the given headers and data.
 
         Args:
             uri (str): The URI to send the request to.
             headers (dict): The headers to include in the request.
-            data (bytes): The data to include in the request body.
+            data (dict): The data to include in the request body.
+            retrying_after_login (bool, optional): Indicates whether the request is being retried after logging in. Defaults to False.
 
         Returns:
-            The response object from the server.
+            dict: The JSON response from the server.
+
+        Raises:
+            BradfordWhiteConnectUnknownException: If a 401 status code is received after logging in.
+            requests.exceptions.HTTPError: If a non-401 status code is received.
         """
+
         # trunk-ignore(flake8/E501)
         async with self.session.post(uri, headers=headers, data=data) as response:
+            # catch access denied errors and attempt to re-authenticate
+            if response.status == 401:
+                # if we're already retrying after logging in, raise an exception
+                if retrying_after_login:
+                    raise BradfordWhiteConnectUnknownException(
+                        "Received status code 401 after logging in"
+                    )
+
+                # update headers with new token
+                logger.debug("Token may be expired - retrying login")
+                await self.authenticate()
+                headers["authorization"] = f"auth_token {self.token}"
+
+                # retry the request
+                return await self.http_post_request(
+                    uri, headers, data, retrying_after_login=True
+                )
+
             response.raise_for_status()
             return await response.json()
 
