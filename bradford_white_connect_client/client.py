@@ -60,19 +60,21 @@ class BradfordWhiteConnectClient:
         Args:
             uri (str): The URI to send the GET request to.
             headers (Dict[str, str]): The headers to include in the request.
-            retrying_after_login (bool, optional): Indicates whether the request is being retried after logging in. Defaults to False.
+            retrying_after_login (bool, optional): Indicates whether the
+            request is being retried after logging in. Defaults to False.
 
         Returns:
             str: The response body as a string.
 
         Raises:
-            BradfordWhiteConnectUnknownException: If a 401 status code is received after logging in.
-            requests.exceptions.HTTPError: If a non-2xx status code is received.
+            BradfordWhiteConnectUnknownException: If a 401 status code is
+            received after logging in. requests.exceptions.HTTPError: If a
+            non-2xx status code is received.
         """
         async with self.session.get(uri, headers=headers) as response:
             # catch access denied errors and attempt to re-authenticate
             if response.status == 401:
-                # if we're already retrying after logging in, raise an exception
+                # if retrying after login, raise exception
                 if retrying_after_login:
                     raise BradfordWhiteConnectUnknownException(
                         "Received status code 401 after logging in"
@@ -95,27 +97,30 @@ class BradfordWhiteConnectClient:
         self, uri, headers, data, retrying_after_login: bool = False
     ):
         """
-        Sends an HTTP POST request to the specified URI with the given headers and data.
+        Sends an HTTP POST request to the specified URI.
 
         Args:
             uri (str): The URI to send the request to.
             headers (dict): The headers to include in the request.
             data (dict): The data to include in the request body.
-            retrying_after_login (bool, optional): Indicates whether the request is being retried after logging in. Defaults to False.
+            retrying_after_login (bool, optional): Indicates whether
+            the request is being retried after logging in. Defaults to False.
 
         Returns:
             dict: The JSON response from the server.
 
         Raises:
-            BradfordWhiteConnectUnknownException: If a 401 status code is received after logging in.
-            requests.exceptions.HTTPError: If a non-401 status code is received.
+            BradfordWhiteConnectUnknownException: If a 401 status code is
+            received after logging in. requests.exceptions.HTTPError:
+            If a non-401 status code is received.
         """
 
         # trunk-ignore(flake8/E501)
         async with self.session.post(uri, headers=headers, data=data) as response:
             # catch access denied errors and attempt to re-authenticate
             if response.status == 401:
-                # if we're already retrying after logging in, raise an exception
+                # if we're already retrying after logging in,
+                # raise an exception
                 if retrying_after_login:
                     raise BradfordWhiteConnectUnknownException(
                         "Received status code 401 after logging in"
