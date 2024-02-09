@@ -52,7 +52,10 @@ class BradfordWhiteConnectClient:
         before_sleep=before_sleep_log(logger, logging.DEBUG),
     )
     async def http_get_request(
-        self, uri: str, headers: Dict[str, str], retrying_after_login: bool = False
+        self,
+        uri: str,
+        headers: Dict[str, str],
+        retrying_after_login: bool = False,
     ) -> str:
         """
         Sends an HTTP GET request to the specified URI with the given headers.
