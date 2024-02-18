@@ -8,3 +8,7 @@ class BradfordWhiteConnectHeatingModes:
     ELECTRIC = 1
     HEAT_PUMP = 2
     VACATION = 4
+
+    @classmethod
+    def is_valid(cls, value):
+        return value in {cls.HYBRID, cls.ELECTRIC, cls.HEAT_PUMP, cls.VACATION}
