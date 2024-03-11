@@ -55,6 +55,7 @@ class BradfordWhiteConnectClient:
         self,
         uri: str,
         headers: Dict[str, str],
+        params: Optional[Dict[str, str]] = None,
         retrying_after_login: bool = False,
     ) -> str:
         """
@@ -63,6 +64,7 @@ class BradfordWhiteConnectClient:
         Args:
             uri (str): The URI to send the GET request to.
             headers (Dict[str, str]): The headers to include in the request.
+            params (Dict[str, str], optional): The query parameters to include
             retrying_after_login (bool, optional): Indicates whether the
             request is being retried after logging in. Defaults to False.
 
@@ -90,7 +92,7 @@ class BradfordWhiteConnectClient:
 
                 # retry the request
                 return await self.http_get_request(
-                    uri, headers, retrying_after_login=True
+                    uri, headers, params, retrying_after_login=True
                 )
 
             response.raise_for_status()
@@ -118,7 +120,6 @@ class BradfordWhiteConnectClient:
             If a non-401 status code is received.
         """
 
-        # trunk-ignore(flake8/E501)
         async with self.session.post(uri, headers=headers, data=data) as response:
             # catch access denied errors and attempt to re-authenticate
             if response.status == 401:
@@ -148,14 +149,13 @@ class BradfordWhiteConnectClient:
             "accept": "*/*",
             "user-agent": "BWConnect/1.2.1 (iPhone; iOS 17.3; Scale/3.00)",
             "accept-language": "en;q=1, am-US;q=0.9",
-            "authorization": f"auth_token {self.token}",
         }
 
         url = "https://ads-field.aylanetworks.com" "/apiv1/devices.json"
         responseJson = await self.http_get_request(url, headers=headers)
 
         # Map to Device class
-        return [Device(**item["device"]) for item in responseJson]
+        return [Device(item["device"]) for item in responseJson]
 
     async def get_device_properties(self, device: Device):
         headers = {
@@ -163,7 +163,6 @@ class BradfordWhiteConnectClient:
             "accept": "*/*",
             "user-agent": "BWConnect/1.2.1 (iPhone; iOS 17.3; Scale/3.00)",
             "accept-language": "en;q=1, am-US;q=0.9",
-            "authorization": f"auth_token {self.token}",
         }
 
         url = (
@@ -173,7 +172,6 @@ class BradfordWhiteConnectClient:
         responseJson = await self.http_get_request(url, headers=headers)
 
         # Map to PropertyWrapper class
-        # trunk-ignore(flake8/E501)
         return [PropertyWrapper(Property(**item["property"])) for item in responseJson]
 
     async def set_device_heat_mode(
@@ -185,7 +183,6 @@ class BradfordWhiteConnectClient:
             "content-type": "application/json",
             "x-ayla-source": "Mobile",
             "accept-language": "en;q=1, am-US;q=0.9",
-            "authorization": f"auth_token {self.token}",
             "user-agent": "BWConnect/1.2.1 (iPhone; iOS 17.3; Scale/3.00)",
         }
 
@@ -210,7 +207,6 @@ class BradfordWhiteConnectClient:
             "content-type": "application/json",
             "x-ayla-source": "Mobile",
             "accept-language": "en;q=1, am-US;q=0.9",
-            "authorization": f"auth_token {self.token}",
             "user-agent": "BWConnect/1.2.1 (iPhone; iOS 17.3; Scale/3.00)",
         }
 
@@ -227,6 +223,43 @@ class BradfordWhiteConnectClient:
             headers=headers,
             data=json.dumps(data),
         )
+
+    async def get_yearly_energy(self, device: Device, type, start_date, end_date):
+        headers = {
+            "Host": "ads-field.aylanetworks.com",
+            "accept": "application/json,description",
+            "content-type": "application/json",
+            "accept-language": "en;q=1.0, am-US;q=0.9",
+            "user-agent": "BWConnect/1.2.1 (iPhone; iOS 17.3; Scale/3.00)",
+        }
+
+        params = {
+            "per_page": 0,
+            "is_forward_page": "true",
+            "paginated": "true",
+            "filter[created_at_since_date]": start_date,
+            "filter[created_at_end_date]": end_date,
+        }
+
+        url = (
+            f"https://ads-field.aylanetworks.com/apiv1/dsns/"
+            f"{device.dsn}/properties/daily_{type}/datapoints"
+        )
+        response = await self.http_get_request(url, headers, params)
+
+        total = 0.0
+
+        for item in response:
+            value_left = float(item["datapoint"]["value"].split(":")[0])
+            total += value_left
+
+        return total
+
+    async def get_yearly_hpe(self, device: Device, start_date, end_date):
+        return await self.get_yearly_energy(device, "hpe", start_date, end_date)
+
+    async def get_yearly_ree(self, device: Device, start_date, end_date):
+        return await self.get_yearly_energy(device, "ree", start_date, end_date)
 
     async def authenticate(self):
         """
