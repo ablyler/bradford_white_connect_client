@@ -76,7 +76,7 @@ class BradfordWhiteConnectClient:
             received after logging in. requests.exceptions.HTTPError: If a
             non-2xx status code is received.
         """
-        async with self.session.get(uri, headers=headers) as response:
+        async with self.session.get(uri, headers=headers, params=params) as response:
             # catch access denied errors and attempt to re-authenticate
             if response.status == 401:
                 # if retrying after login, raise exception
@@ -155,7 +155,7 @@ class BradfordWhiteConnectClient:
         responseJson = await self.http_get_request(url, headers=headers)
 
         # Map to Device class
-        return [Device(item["device"]) for item in responseJson]
+        return [Device(**item["device"]) for item in responseJson]
 
     async def get_device_properties(self, device: Device):
         headers = {
@@ -229,16 +229,16 @@ class BradfordWhiteConnectClient:
             "Host": "ads-field.aylanetworks.com",
             "accept": "application/json,description",
             "content-type": "application/json",
-            "accept-language": "en;q=1.0, am-US;q=0.9",
             "user-agent": "BWConnect/1.2.1 (iPhone; iOS 17.3; Scale/3.00)",
+            "accept-language": "en;q=1.0, am-US;q=0.9",
         }
 
         params = {
             "per_page": 0,
-            "is_forward_page": "true",
             "paginated": "true",
-            "filter[created_at_since_date]": start_date,
-            "filter[created_at_end_date]": end_date,
+            "is_forward_page": "true",
+            "filter[created_at_since_date]": start_date.strftime("%Y-%m-%dT%H:%M:%S%z"),
+            "filter[created_at_end_date]": end_date.strftime("%Y-%m-%dT%H:%M:%S%z"),
         }
 
         url = (
@@ -249,7 +249,7 @@ class BradfordWhiteConnectClient:
 
         total = 0.0
 
-        for item in response:
+        for item in response["datapoints"]:
             value_left = float(item["datapoint"]["value"].split(":")[0])
             total += value_left
 
