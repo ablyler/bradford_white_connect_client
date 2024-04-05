@@ -2,7 +2,7 @@
 
 import json
 import logging
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 import aiohttp
 from tenacity import (
@@ -157,61 +157,20 @@ class BradfordWhiteConnectClient:
         # Map to Device class
         return [Device(**item["device"]) for item in responseJson]
 
-    async def get_device_heating_modes(self, device: Device):
+    async def get_device_properties(self, device: Device) -> List[PropertyWrapper]:
         """
-        Retrieves the heating modes supported by a given device.
+        This function retrieves the properties of a given device.
 
-        Args:
-            device (Device): The device for which to retrieve the heating modes.
+        Parameters:
+        device (Device): The device for which to retrieve the properties.
 
         Returns:
-            list: A list of heating modes supported by the device.
+        List[PropertyWrapper]: A list of PropertyWrapper instances, each wrapping a Property object representing a property of the device.
 
-        Raises:
-            BradfordWhiteConnectUnknownException: If the 'appliance_model_out' property is not found.
+        The function sends a GET request to the Ayla Networks API, specifically to the endpoint for retrieving the properties of a device.
+        The response from the API is expected to be a JSON object, which is then parsed and mapped to Property objects.
+        Each Property object is then wrapped in a PropertyWrapper instance, and the function returns a list of these instances.
         """
-        properties = await self.get_device_properties(device)
-
-        # find the property that has the name "appliance_model_out"
-        appliance_model_out = next(
-            (p for p in properties if p.property.name == "appliance_model_out"), None
-        )
-
-        # if the property is not found, raise an exception
-        if appliance_model_out is None:
-            raise BradfordWhiteConnectUnknownException(
-                "Could not find appliance_model_out property"
-            )
-
-        # remove trailing spaces from the model number
-        appliance_model_out.property.value = appliance_model_out.property.value.strip()
-
-        # model numbers sourced from:
-        # https://forthepro.bradfordwhite.com/our-products/usa-residential-heat-pump/aerotherm-series-heat-pump/
-        model_numbers_without_hybrid_plus = [
-            "RE2H50S10-1NCWT",
-            "RE2H65T10-1NCWT",
-            "RE2H80T10-1NCWT",
-        ]
-
-        # return the heating modes based on the model number
-        if appliance_model_out.property.value in model_numbers_without_hybrid_plus:
-            return [
-                BradfordWhiteConnectHeatingModes.ELECTRIC,
-                BradfordWhiteConnectHeatingModes.HEAT_PUMP,
-                BradfordWhiteConnectHeatingModes.VACATION,
-                BradfordWhiteConnectHeatingModes.HYBRID,
-            ]
-        else:
-            return [
-                BradfordWhiteConnectHeatingModes.ELECTRIC,
-                BradfordWhiteConnectHeatingModes.HEAT_PUMP,
-                BradfordWhiteConnectHeatingModes.VACATION,
-                BradfordWhiteConnectHeatingModes.HYBRID,
-                BradfordWhiteConnectHeatingModes.HYBRID_PLUS,
-            ]
-
-    async def get_device_properties(self, device: Device):
         headers = {
             "Host": "ads-field.aylanetworks.com",
             "accept": "*/*",
