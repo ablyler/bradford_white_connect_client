@@ -44,6 +44,33 @@ class BradfordWhiteConnectClient:
         else:
             self.session = session
 
+    def generate_headers(
+        self,
+        # trunk-ignore(ruff/B006)
+        additional_headers: Dict[str, str] = {},
+    ) -> Dict[str, str]:
+        """
+        Generate headers for the HTTP request.
+
+        Args:
+            additional_headers (Dict[str, str], optional): Additional headers to be merged with the default headers. Defaults to {}.
+
+        Returns:
+            Dict[str, str]: The generated headers.
+        """
+        headers = {
+            "Host": "ads-field.aylanetworks.com",
+            "accept": "*/*",
+            "user-agent": "BWConnect/1.2.6 (iPhone; iOS 17.5.1; Scale/3.00)",
+            "accept-language": "en;q=1, am-US;q=0.9",
+        }
+
+        # merge additional headers
+        if additional_headers:
+            headers.update(additional_headers)
+
+        return headers
+
     @retry(
         retry=retry_if_exception_type(BradfordWhiteConnectUnknownException),
         reraise=True,
@@ -144,12 +171,7 @@ class BradfordWhiteConnectClient:
             return await response.json()
 
     async def get_devices(self):
-        headers = {
-            "Host": "ads-field.aylanetworks.com",
-            "accept": "*/*",
-            "user-agent": "BWConnect/1.2.1 (iPhone; iOS 17.3; Scale/3.00)",
-            "accept-language": "en;q=1, am-US;q=0.9",
-        }
+        headers = self.generate_headers()
 
         url = "https://ads-field.aylanetworks.com" "/apiv1/devices.json"
         responseJson = await self.http_get_request(url, headers=headers)
@@ -171,12 +193,7 @@ class BradfordWhiteConnectClient:
         The response from the API is expected to be a JSON object, which is then parsed and mapped to Property objects.
         Each Property object is then wrapped in a PropertyWrapper instance, and the function returns a list of these instances.
         """
-        headers = {
-            "Host": "ads-field.aylanetworks.com",
-            "accept": "*/*",
-            "user-agent": "BWConnect/1.2.1 (iPhone; iOS 17.3; Scale/3.00)",
-            "accept-language": "en;q=1, am-US;q=0.9",
-        }
+        headers = self.generate_headers()
 
         url = (
             f"https://ads-field.aylanetworks.com"
@@ -190,14 +207,11 @@ class BradfordWhiteConnectClient:
     async def set_device_heat_mode(
         self, device, mode: BradfordWhiteConnectHeatingModes
     ):
-        headers = {
-            "Host": "ads-field.aylanetworks.com",
-            "accept": "*/*",
+        additional_headers = {
             "content-type": "application/json",
             "x-ayla-source": "Mobile",
-            "accept-language": "en;q=1, am-US;q=0.9",
-            "user-agent": "BWConnect/1.2.1 (iPhone; iOS 17.3; Scale/3.00)",
         }
+        headers = self.generate_headers(additional_headers)
 
         data = {"datapoint": {"value": mode}}
 
@@ -214,14 +228,12 @@ class BradfordWhiteConnectClient:
         )
 
     async def update_device_set_point(self, device, value):
-        headers = {
-            "Host": "ads-field.aylanetworks.com",
-            "accept": "*/*",
+        additional_headers = {
             "content-type": "application/json",
             "x-ayla-source": "Mobile",
-            "accept-language": "en;q=1, am-US;q=0.9",
-            "user-agent": "BWConnect/1.2.1 (iPhone; iOS 17.3; Scale/3.00)",
         }
+
+        headers = self.generate_headers(additional_headers)
 
         data = {"datapoint": {"value": value}}
 
@@ -238,13 +250,11 @@ class BradfordWhiteConnectClient:
         )
 
     async def get_yearly_energy(self, device: Device, type, start_date, end_date):
-        headers = {
-            "Host": "ads-field.aylanetworks.com",
+        additional_headers = {
             "accept": "application/json,description",
-            "content-type": "application/json",
-            "user-agent": "BWConnect/1.2.1 (iPhone; iOS 17.3; Scale/3.00)",
-            "accept-language": "en;q=1.0, am-US;q=0.9",
         }
+
+        headers = self.generate_headers(additional_headers)
 
         params = {
             "per_page": 0,
@@ -284,14 +294,11 @@ class BradfordWhiteConnectClient:
         Returns:
             None
         """
-
-        headers = {
-            "Host": "user-field.aylanetworks.com",
-            "accept": "*/*",
+        additional_headers = {
             "content-type": "application/json",
-            "user-agent": "BWConnect/1.2.1 (iPhone; iOS 17.3; Scale/3.00)",
-            "accept-language": "en;q=1, am-US;q=0.9",
         }
+
+        headers = self.generate_headers(additional_headers)
 
         data = {
             "user": {
