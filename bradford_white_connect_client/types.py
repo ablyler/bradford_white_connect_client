@@ -65,4 +65,5 @@ class Device:
     locality: Optional[str]
     device_type: str
     dealer: Optional[str]
+    facility_uuid: Optional[str]
     properties: Optional[List[Property]] = field(default=None)
