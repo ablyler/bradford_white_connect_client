@@ -47,7 +47,7 @@ pre-commit = "^3.7.1"
 pytest = "^8.3.1"
 pytest-aiohttp = "*"
 pytest-cov = "^5.0.0"
-tenacity = "^8.5.0"
+tenacity = "^9.0.0"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
