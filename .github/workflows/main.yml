@@ -87,6 +87,8 @@ jobs:
         run: |
           pip install pipenv
           pipenv install
+      - name: Install types-pytz for mypy
+        run: pip install types-pytz
       - name: Run Trunk Check
         uses: trunk-io/trunk-action@v1
 
