@@ -5,6 +5,7 @@ import logging
 from typing import Dict, List, Optional
 
 import aiohttp
+import pytz
 from tenacity import (
     before_sleep_log,
     retry,
@@ -266,7 +267,7 @@ class BradfordWhiteConnectClient:
 
         url = (
             f"https://ads-field.aylanetworks.com/apiv1/dsns/"
-            f"{device.dsn}/properties/daily_{type}/datapoints"
+            f"{device.dsn}/properties/daily_{type}e/datapoints"
         )
         response = await self.http_get_request(url, headers, params)
 
@@ -279,10 +280,66 @@ class BradfordWhiteConnectClient:
         return total
 
     async def get_yearly_hpe(self, device: Device, start_date, end_date):
-        return await self.get_yearly_energy(device, "hpe", start_date, end_date)
+        return await self.get_yearly_energy(device, "hp", start_date, end_date)
 
     async def get_yearly_ree(self, device: Device, start_date, end_date):
-        return await self.get_yearly_energy(device, "ree", start_date, end_date)
+        return await self.get_yearly_energy(device, "re", start_date, end_date)
+
+    async def get_hourly_energy_usage(self, device: Device, type, start_date, end_date):
+        additional_headers = {
+            "accept": "application/json,description",
+        }
+
+        headers = self.generate_headers(additional_headers)
+
+        params = {
+            "per_page": 24,
+            "is_forward_page": "true",
+            "paginated": "true",
+            "filter[created_at_since_date]": start_date.strftime("%Y-%m-%dT%H:%M:%S%z"),
+            "filter[created_at_end_date]": end_date.strftime("%Y-%m-%dT%H:%M:%S%z"),
+        }
+
+        url = f"https://ads-field.aylanetworks.com/apiv1/dsns/{device.dsn}/properties/{type}_energy/datapoints"
+        total_energy_usage = 0.0
+        while url:
+            response = await self.http_get_request(url, headers, params)
+            # print(response)
+            for item in response["datapoints"]:
+                print(item)
+                value_left = float(item["datapoint"]["value"].split(":")[0])
+                total_energy_usage += value_left
+            url = response.get("next_page_url")
+
+        return total_energy_usage
+
+    async def get_hourly_hpe(self, device: Device, start_date, end_date):
+        return await self.get_hourly_energy_usage(device, "hp", start_date, end_date)
+
+    async def get_hourly_ree(self, device: Device, start_date, end_date):
+        return await self.get_hourly_energy_usage(device, "re", start_date, end_date)
+
+    async def get_total_energy_usage_for_day(self, device: Device, type, date):
+        """
+        Asynchronously retrieves the total energy usage for a specific device and type over a given day.
+
+        Args:
+            device (Device): The device for which to retrieve energy usage.
+            type: The type of energy usage to retrieve. Must be either "hp" or "re".
+            date (datetime): The date for which to retrieve the total energy usage.
+
+        Returns:
+            The total energy usage for the specified device and type over the given day.
+
+        """
+        start_date = date.replace(hour=0, minute=0, second=0, microsecond=0)
+        end_date = date.replace(hour=23, minute=59, second=59, microsecond=999999)
+
+        # convert the start and end dates to utc
+        start_date = start_date.astimezone(pytz.utc)
+        end_date = end_date.astimezone(pytz.utc)
+
+        return await self.get_hourly_energy_usage(device, type, start_date, end_date)
 
     async def authenticate(self):
         """
