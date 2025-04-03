@@ -488,12 +488,12 @@
         },
         "types-pytz": {
             "hashes": [
-                "sha256:3e22df1336c0c6ad1d29163c8fda82736909eb977281cb823c57f8bae07118b7",
-                "sha256:575dc38f385a922a212bac00a7d6d2e16e141132a3c955078f4a4fd13ed6cb44"
+                "sha256:00f750132769f1c65a4f7240bc84f13985b4da774bd17dfbe5d9cd442746bd49",
+                "sha256:32ca4a35430e8b94f6603b35beb7f56c32260ddddd4f4bb305fdf8f92358b87e"
             ],
             "index": "pypi",
-            "markers": "python_version >= '3.8'",
-            "version": "==2024.2.0.20241003"
+            "markers": "python_version >= '3.9'",
+            "version": "==2025.1.0.20250204"
         },
         "typing-extensions": {
             "hashes": [
