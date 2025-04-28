@@ -5,6 +5,7 @@ import logging
 from typing import Dict, List, Optional
 
 import aiohttp
+
 # trunk-ignore(mypy/import-untyped)
 # trunk-ignore(mypy/note)
 import pytz
