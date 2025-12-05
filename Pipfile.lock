@@ -609,12 +609,12 @@
         },
         "types-pytz": {
             "hashes": [
-                "sha256:3c397fd1b845cd2b3adc9398607764ced9e578a98a5d1fbb4a9bc9253edfb162",
-                "sha256:deda02de24f527066fc8d6a19e284ab3f3ae716a42b4adb6b40e75e408c08d36"
+                "sha256:222e32e6a29bb28871f8834e8785e3801f2dc4441c715cd2082b271eecbe21e5",
+                "sha256:4f55ed1b43e925cf851a756fe1707e0f5deeb1976e15bf844bcaa025e8fbd0db"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.9'",
-            "version": "==2025.2.0.20250326"
+            "version": "==2025.2.0.20250809"
         },
         "typing-extensions": {
             "hashes": [
