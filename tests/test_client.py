@@ -108,11 +108,11 @@ async def test_authenticate_omits_an_expired_token_from_request_headers():
     client = make_client()
     # trunk-ignore(bandit/B105)
     client.token = "expired-token"
-    client.http_post_request = AsyncMock(return_value={"access_token": "fresh"})
+    fresh_token = client.email
+    client.http_post_request = AsyncMock(return_value={"access_token": fresh_token})
 
     await client.authenticate()
 
     headers = client.http_post_request.call_args.kwargs["headers"]
     assert "authorization" not in headers
-    # trunk-ignore(bandit/B105)
-    assert client.token == "fresh"
+    assert client.token == fresh_token
