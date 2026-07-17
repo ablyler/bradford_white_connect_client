@@ -1,7 +1,7 @@
 """Define package types."""
 
-from dataclasses import dataclass, field
-from typing import List, Optional
+from dataclasses import dataclass, field, fields
+from typing import Any, List, Mapping, Optional, Type, TypeVar
 
 from dataclasses_json import LetterCase, dataclass_json
 
@@ -34,6 +34,7 @@ class Property:
     ack_status: Optional[str] = field(default=None)
     ack_message: Optional[str] = field(default=None)
     acked_at: Optional[str] = field(default=None)
+    passthrough: Optional[bool] = field(default=None)
 
 
 @dataclass
@@ -41,7 +42,7 @@ class PropertyWrapper:
     property: Property
 
 
-@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass_json(letter_case=LetterCase.CAMEL)  # pyright: ignore[reportArgumentType]
 @dataclass
 class Device:
     product_name: str
@@ -66,4 +67,15 @@ class Device:
     device_type: str
     dealer: Optional[str]
     facility_uuid: Optional[str]
+    oem: Optional[str] = field(default=None)
+    transport_type: Optional[str] = field(default=None)
     properties: Optional[List[Property]] = field(default=None)
+
+
+T = TypeVar("T", Device, Property)
+
+
+def dataclass_from_api(cls: Type[T], payload: Mapping[str, Any]) -> T:
+    """Build a dataclass from an API payload, ignoring additive API fields."""
+    field_names = {item.name for item in fields(cls)}
+    return cls(**{key: value for key, value in payload.items() if key in field_names})

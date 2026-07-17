@@ -6,9 +6,7 @@ name = "pypi"
 [packages]
 aiohttp = "*"
 dataclasses-json = "*"
-pytz = "*"
 tenacity = "*"
-types-pytz = "*"
 
 [dev-packages]
 pytest = "*"
