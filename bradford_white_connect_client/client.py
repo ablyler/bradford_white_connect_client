@@ -1,14 +1,11 @@
 """Define a base client for interacting with Bradford White Connect."""
 
+from datetime import timezone
 import json
 import logging
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import aiohttp
-
-# trunk-ignore(mypy/import-untyped)
-# trunk-ignore(mypy/note)
-import pytz
 from tenacity import (
     before_sleep_log,
     retry,
@@ -26,7 +23,7 @@ from .exceptions import (
     BradfordWhiteConnectAuthenticationError,
     BradfordWhiteConnectUnknownException,
 )
-from .types import Device, Property, PropertyWrapper
+from .types import Device, Property, PropertyWrapper, dataclass_from_api
 
 logger = logging.getLogger(__name__)
 
@@ -50,14 +47,17 @@ class BradfordWhiteConnectClient:
 
     def generate_headers(
         self,
-        # trunk-ignore(ruff/B006)
-        additional_headers: Dict[str, str] = {},
+        additional_headers: Optional[Dict[str, str]] = None,
+        include_token: bool = True,
     ) -> Dict[str, str]:
         """
         Generate headers for the HTTP request.
 
         Args:
-            additional_headers (Dict[str, str], optional): Additional headers to be merged with the default headers. Defaults to {}.
+            additional_headers (Dict[str, str], optional): Additional headers to
+                merge with the defaults. Defaults to None.
+            include_token (bool): Whether to include the current authentication
+                token. Defaults to True.
 
         Returns:
             Dict[str, str]: The generated headers.
@@ -68,6 +68,9 @@ class BradfordWhiteConnectClient:
             "user-agent": "BWConnect/1.2.6 (iPhone; iOS 17.5.1; Scale/3.00)",
             "accept-language": "en;q=1, am-US;q=0.9",
         }
+
+        if self.token and include_token:
+            headers["authorization"] = f"auth_token {self.token}"
 
         # merge additional headers
         if additional_headers:
@@ -88,7 +91,7 @@ class BradfordWhiteConnectClient:
         headers: Dict[str, str],
         params: Optional[Dict[str, str]] = None,
         retrying_after_login: bool = False,
-    ) -> str:
+    ) -> Any:
         """
         Sends an HTTP GET request to the specified URI with the given headers.
 
@@ -100,11 +103,11 @@ class BradfordWhiteConnectClient:
             request is being retried after logging in. Defaults to False.
 
         Returns:
-            str: The response body as a string.
+            Any: The decoded JSON response body.
 
         Raises:
             BradfordWhiteConnectUnknownException: If a 401 status code is
-            received after logging in. requests.exceptions.HTTPError: If a
+            received after logging in. aiohttp.ClientResponseError: If a
             non-2xx status code is received.
         """
         async with self.session.get(uri, headers=headers, params=params) as response:
@@ -147,7 +150,7 @@ class BradfordWhiteConnectClient:
 
         Raises:
             BradfordWhiteConnectUnknownException: If a 401 status code is
-            received after logging in. requests.exceptions.HTTPError:
+            received after logging in. aiohttp.ClientResponseError:
             If a non-401 status code is received.
         """
 
@@ -177,11 +180,11 @@ class BradfordWhiteConnectClient:
     async def get_devices(self):
         headers = self.generate_headers()
 
-        url = "https://ads-field.aylanetworks.com" "/apiv1/devices.json"
+        url = "https://ads-field.aylanetworks.com/apiv1/devices.json"
         responseJson = await self.http_get_request(url, headers=headers)
 
         # Map to Device class
-        return [Device(**item["device"]) for item in responseJson]
+        return [dataclass_from_api(Device, item["device"]) for item in responseJson]
 
     async def get_device_properties(self, device: Device) -> List[PropertyWrapper]:
         """
@@ -206,7 +209,10 @@ class BradfordWhiteConnectClient:
         responseJson = await self.http_get_request(url, headers=headers)
 
         # Map to PropertyWrapper class
-        return [PropertyWrapper(Property(**item["property"])) for item in responseJson]
+        return [
+            PropertyWrapper(dataclass_from_api(Property, item["property"]))
+            for item in responseJson
+        ]
 
     async def set_device_heat_mode(
         self, device, mode: BradfordWhiteConnectHeatingModes
@@ -309,7 +315,6 @@ class BradfordWhiteConnectClient:
             response = await self.http_get_request(url, headers, params)
             # print(response)
             for item in response["datapoints"]:
-                print(item)
                 value_left = float(item["datapoint"]["value"].split(":")[0])
                 total_energy_usage += value_left
             url = response.get("next_page_url")
@@ -339,8 +344,8 @@ class BradfordWhiteConnectClient:
         end_date = date.replace(hour=23, minute=59, second=59, microsecond=999999)
 
         # convert the start and end dates to utc
-        start_date = start_date.astimezone(pytz.utc)
-        end_date = end_date.astimezone(pytz.utc)
+        start_date = start_date.astimezone(timezone.utc)
+        end_date = end_date.astimezone(timezone.utc)
 
         return await self.get_hourly_energy_usage(device, type, start_date, end_date)
 
@@ -358,7 +363,7 @@ class BradfordWhiteConnectClient:
             "content-type": "application/json",
         }
 
-        headers = self.generate_headers(additional_headers)
+        headers = self.generate_headers(additional_headers, include_token=False)
 
         data = {
             "user": {
