@@ -1,11 +1,12 @@
-from unittest.mock import AsyncMock
+# trunk-ignore-all(bandit/B101)
+
 from typing import cast
+from unittest.mock import AsyncMock
 
 import aiohttp
 
 from bradford_white_connect_client.client import BradfordWhiteConnectClient
 from bradford_white_connect_client.types import Device, dataclass_from_api
-
 
 DEVICE_PAYLOAD = {
     "product_name": "Water Heater",
@@ -97,6 +98,7 @@ def test_generate_headers_includes_token_after_authentication():
     client = make_client()
     assert "authorization" not in client.generate_headers()
 
+    # trunk-ignore(bandit/B105)
     client.token = "token"
 
     assert client.generate_headers()["authorization"] == "auth_token token"

@@ -1,12 +1,11 @@
 """Define a base client for interacting with Bradford White Connect."""
 
+from datetime import timezone
 import json
 import logging
-from datetime import timezone
 from typing import Any, Dict, List, Optional
 
 import aiohttp
-
 from tenacity import (
     before_sleep_log,
     retry,
