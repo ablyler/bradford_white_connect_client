@@ -48,12 +48,16 @@ class BradfordWhiteConnectClient:
     def generate_headers(
         self,
         additional_headers: Optional[Dict[str, str]] = None,
+        include_token: bool = True,
     ) -> Dict[str, str]:
         """
         Generate headers for the HTTP request.
 
         Args:
-            additional_headers (Dict[str, str], optional): Additional headers to be merged with the default headers. Defaults to {}.
+            additional_headers (Dict[str, str], optional): Additional headers to
+                merge with the defaults. Defaults to None.
+            include_token (bool): Whether to include the current authentication
+                token. Defaults to True.
 
         Returns:
             Dict[str, str]: The generated headers.
@@ -65,7 +69,7 @@ class BradfordWhiteConnectClient:
             "accept-language": "en;q=1, am-US;q=0.9",
         }
 
-        if self.token:
+        if self.token and include_token:
             headers["authorization"] = f"auth_token {self.token}"
 
         # merge additional headers
@@ -99,11 +103,11 @@ class BradfordWhiteConnectClient:
             request is being retried after logging in. Defaults to False.
 
         Returns:
-            str: The response body as a string.
+            Any: The decoded JSON response body.
 
         Raises:
             BradfordWhiteConnectUnknownException: If a 401 status code is
-            received after logging in. requests.exceptions.HTTPError: If a
+            received after logging in. aiohttp.ClientResponseError: If a
             non-2xx status code is received.
         """
         async with self.session.get(uri, headers=headers, params=params) as response:
@@ -146,7 +150,7 @@ class BradfordWhiteConnectClient:
 
         Raises:
             BradfordWhiteConnectUnknownException: If a 401 status code is
-            received after logging in. requests.exceptions.HTTPError:
+            received after logging in. aiohttp.ClientResponseError:
             If a non-401 status code is received.
         """
 
@@ -359,7 +363,7 @@ class BradfordWhiteConnectClient:
             "content-type": "application/json",
         }
 
-        headers = self.generate_headers(additional_headers)
+        headers = self.generate_headers(additional_headers, include_token=False)
 
         data = {
             "user": {
