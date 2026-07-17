@@ -43,7 +43,7 @@ lint:
 actions:
   disabled:
     - trunk-check-pre-push
-    - trunk-fmt-pre-commit
   enabled:
+    - trunk-fmt-pre-commit
     - trunk-announce
     - trunk-upgrade-available
