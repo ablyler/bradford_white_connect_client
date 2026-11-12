@@ -1,7 +1,11 @@
 /.pytest_cache
 /.venv
+/.env
 
 megalinter-reports/
 node_modules/
 __pycache__/
 /dist
+
+# Local scratch script (reads BWC_EMAIL / BWC_PASSWORD from env)
+/ablyler.py
