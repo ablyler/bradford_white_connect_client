@@ -86,7 +86,7 @@ jobs:
           PIPENV_VENV_IN_PROJECT: true
         run: |
           pip install pipenv
-          pipenv install
+          pipenv install --dev
       - name: Run Trunk Check
         uses: trunk-io/trunk-action@v1
 
