@@ -133,7 +133,12 @@ class BradfordWhiteConnectClient:
             return await response.json()
 
     async def http_post_request(
-        self, uri, headers, data, retrying_after_login: bool = False
+        self,
+        uri,
+        headers,
+        data,
+        retrying_after_login: bool = False,
+        retry_on_unauthorized: bool = True,
     ):
         """
         Sends an HTTP POST request to the specified URI.
@@ -144,11 +149,15 @@ class BradfordWhiteConnectClient:
             data (dict): The data to include in the request body.
             retrying_after_login (bool, optional): Indicates whether
             the request is being retried after logging in. Defaults to False.
+            retry_on_unauthorized (bool, optional): Whether a 401 response
+            should trigger re-authentication and a retry. Defaults to True.
 
         Returns:
             dict: The JSON response from the server.
 
         Raises:
+            BradfordWhiteConnectAuthenticationError: If a 401 status code is
+            received and retry_on_unauthorized is False.
             BradfordWhiteConnectUnknownException: If a 401 status code is
             received after logging in. aiohttp.ClientResponseError:
             If a non-401 status code is received.
@@ -157,6 +166,9 @@ class BradfordWhiteConnectClient:
         async with self.session.post(uri, headers=headers, data=data) as response:
             # catch access denied errors and attempt to re-authenticate
             if response.status == 401:
+                if not retry_on_unauthorized:
+                    raise BradfordWhiteConnectAuthenticationError("Auth failed")
+
                 # if we're already retrying after logging in,
                 # raise an exception
                 if retrying_after_login:
@@ -380,6 +392,7 @@ class BradfordWhiteConnectClient:
             "https://user-field.aylanetworks.com/users/sign_in.json",
             data=json.dumps(data),
             headers=headers,
+            retry_on_unauthorized=False,
         )
 
         if responseJson.get("access_token") is None:

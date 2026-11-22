@@ -1,11 +1,15 @@
 # trunk-ignore-all(bandit/B101)
 
 from typing import cast
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import aiohttp
+import pytest
 
 from bradford_white_connect_client.client import BradfordWhiteConnectClient
+from bradford_white_connect_client.exceptions import (
+    BradfordWhiteConnectAuthenticationError,
+)
 from bradford_white_connect_client.types import Device, dataclass_from_api
 
 DEVICE_PAYLOAD = {
@@ -116,3 +120,42 @@ async def test_authenticate_omits_an_expired_token_from_request_headers():
     headers = client.http_post_request.call_args.kwargs["headers"]
     assert "authorization" not in headers
     assert client.token == fresh_token
+
+
+async def test_authenticate_raises_auth_error_on_401_without_recursing():
+    response = MagicMock()
+    response.status = 401
+    response.__aenter__ = AsyncMock(return_value=response)
+    response.__aexit__ = AsyncMock(return_value=None)
+
+    session = MagicMock(spec=aiohttp.ClientSession)
+    session.post = MagicMock(return_value=response)
+
+    client = BradfordWhiteConnectClient("user@example.com", "wrong", session=session)
+
+    with pytest.raises(BradfordWhiteConnectAuthenticationError):
+        await client.authenticate()
+
+    assert session.post.call_count == 1
+    assert client.token is None
+
+
+async def test_http_post_request_propagates_auth_error_when_reauth_returns_401():
+    response = MagicMock()
+    response.status = 401
+    response.__aenter__ = AsyncMock(return_value=response)
+    response.__aexit__ = AsyncMock(return_value=None)
+
+    session = MagicMock(spec=aiohttp.ClientSession)
+    session.post = MagicMock(return_value=response)
+
+    client = BradfordWhiteConnectClient("user@example.com", "wrong", session=session)
+
+    with pytest.raises(BradfordWhiteConnectAuthenticationError):
+        await client.http_post_request(
+            "https://ads-field.aylanetworks.com/apiv1/test",
+            headers={},
+            data="{}",
+        )
+
+    assert session.post.call_count == 2
