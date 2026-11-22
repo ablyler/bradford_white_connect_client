@@ -157,17 +157,21 @@ class BradfordWhiteConnectClient:
 
         Raises:
             BradfordWhiteConnectAuthenticationError: If a 401 status code is
-            received and retry_on_unauthorized is False.
+                received and retry_on_unauthorized is False.
             BradfordWhiteConnectUnknownException: If a 401 status code is
-            received after logging in. aiohttp.ClientResponseError:
-            If a non-401 status code is received.
+                received after logging in.
+            aiohttp.ClientResponseError: If a non-401 error status code is
+                received.
         """
 
         async with self.session.post(uri, headers=headers, data=data) as response:
             # catch access denied errors and attempt to re-authenticate
             if response.status == 401:
                 if not retry_on_unauthorized:
-                    raise BradfordWhiteConnectAuthenticationError("Auth failed")
+                    self.token = None
+                    raise BradfordWhiteConnectAuthenticationError(
+                        "Login rejected (401): invalid credentials"
+                    )
 
                 # if we're already retrying after logging in,
                 # raise an exception
@@ -366,7 +370,7 @@ class BradfordWhiteConnectClient:
         Authenticates the client with the server.
 
         Raises:
-            AuthenticationError: If authentication fails.
+            BradfordWhiteConnectAuthenticationError: If authentication fails.
 
         Returns:
             None
@@ -396,6 +400,7 @@ class BradfordWhiteConnectClient:
         )
 
         if responseJson.get("access_token") is None:
+            self.token = None
             raise BradfordWhiteConnectAuthenticationError("Auth failed")
 
         self.token = responseJson["access_token"]

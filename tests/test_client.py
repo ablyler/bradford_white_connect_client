@@ -132,6 +132,8 @@ async def test_authenticate_raises_auth_error_on_401_without_recursing():
     session.post = MagicMock(return_value=response)
 
     client = BradfordWhiteConnectClient("user@example.com", "wrong", session=session)
+    # trunk-ignore(bandit/B105)
+    client.token = "stale-token"
 
     with pytest.raises(BradfordWhiteConnectAuthenticationError):
         await client.authenticate()
@@ -159,3 +161,25 @@ async def test_http_post_request_propagates_auth_error_when_reauth_returns_401()
         )
 
     assert session.post.call_count == 2
+
+
+async def test_http_get_request_propagates_auth_error_when_reauth_returns_401():
+    response = MagicMock()
+    response.status = 401
+    response.__aenter__ = AsyncMock(return_value=response)
+    response.__aexit__ = AsyncMock(return_value=None)
+
+    session = MagicMock(spec=aiohttp.ClientSession)
+    session.get = MagicMock(return_value=response)
+    session.post = MagicMock(return_value=response)
+
+    client = BradfordWhiteConnectClient("user@example.com", "wrong", session=session)
+
+    with pytest.raises(BradfordWhiteConnectAuthenticationError):
+        await client.http_get_request(
+            "https://ads-field.aylanetworks.com/apiv1/devices.json",
+            headers={},
+        )
+
+    assert session.get.call_count == 1
+    assert session.post.call_count == 1
